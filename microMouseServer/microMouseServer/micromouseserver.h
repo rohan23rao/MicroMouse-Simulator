@@ -53,7 +53,9 @@ private:
     void turnRight();
     void foundFinish();
     void printUI(const char *mesg);
-
+//    void updat(int (&position)[20][20], int current_facing, int moving_direction);
+    void timesLRF(int &times_forward, int &times_left, int &times_right, int (position)[20][20],
+    int current_direction, int x, int y);
     QTimer *_comTimer;
     QTimer *_aiCallTimer;
     static const int _mDelay = 100;
@@ -63,6 +65,16 @@ private:
     struct baseMapNode mazeData[MAZE_WIDTH][MAZE_HEIGHT];
     void connectSignals();
     void initMaze();
+
+
+//    Initializations:
+//    bool flag = false;
+//    int x = 0, y = 0;
+//    int position[20][20] = {{0}};
+//    int ending = 0;
+//    int current_facing = 0;
+//    int moving_direction = 0;
+
 };
 
 #endif // MICROMOUSESERVER_H

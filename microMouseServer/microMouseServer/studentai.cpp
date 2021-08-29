@@ -1,100 +1,65 @@
+#include "micromouseserver.h"
 #include <iostream>
 using namespace std;
-#include "micromouseserver.h"
-//void turn_store(int (&position)[20][20], int &current_facing, int moving_direction, int x, int y);
 
-int *turn_store(int &current_facing, int moving_direction, int x, int y) {
-    switch (current_facing) {
+void cardinal_cartesian(int &x, int &y, int current_direction, int (&position)[20][20]) {
+    switch (current_direction) {
         case 0:
-            switch (moving_direction) {
-                case 0:
-                    y++;
-                    break;
-                case 1:
-                    current_facing = 1;
-                    break;
-                case 2:
-                    current_facing = 3;
-                    break;
-            }
+            y++;
             break;
         case 1:
-            switch (moving_direction) {
-                case 0:
-                    x++;
-                    break;
-                case 1:
-                    current_facing = 2;
-                    break;
-                case 2:
-                    current_facing = 0;
-                    break;
-            }
+            x++;
             break;
         case 2:
-            switch (moving_direction) {
-                case 0:
-                    y--;
-                    break;
-                case 1:
-                    current_facing = 3;
-                    break;
-                case 2:
-                    current_facing = 1;
-                    break;
-            }
+            y--;
             break;
         case 3:
-            switch (moving_direction) {
-                case 0:
-                    x--;
-                    break;
-                case 1:
-                    current_facing = 0;
-                    break;
-                case 2:
-                    current_facing = 2;
-                    break;
-            }
+            x--;
             break;
     }
-    static int xy[2] = {x, y};
-    return xy;
-
+    position[x][y]++;
 }
 
-
-int timesLeft_(int (&position)[20][20], int current_facing, int x, int y, bool is_left) {
-    if (is_left) {
-        return INT_MAX;
+void print_map(int position[20][20]) {
+    for (int i = 20; i > 0; i--) {
+        for (int j = 0; j < 20; j++) {
+//            cout << '[' << position[i][j] << ']';
+            cout << " " << position[i][j] << " ";
+        }
+        cout << endl;
     }
-    current_facing = ((current_facing+3) % 4);
-    int *ptr = turn_store(current_facing, 0, x, y);
-    return position[ptr[0]][ptr[1]];
 }
 
-bool timesForward_(int (&position)[20][20], int current_facing, int x, int y, bool is_forward) {
-    if (is_forward) {
-        return INT_MAX;
+void microMouseServer::timesLRF(int &times_forward, int &times_left, int &times_right, int (position)[20][20],
+    int current_direction, int x, int y) {
+    switch (current_direction) {
+        case 0:
+            times_forward = position[x][y++];
+            times_left = position[x--][y];
+            times_right = position[x+1][y];
+            break;
+        case 1:
+            times_forward = position[x+1][y];
+            times_left = position[x][y+1];
+            times_right = position[x][y-1];
+            break;
+        case 2:
+            times_forward = position[x][y-1];
+            times_left = position[x+1][y];
+            times_right = position[x-1][y];
+            break;
+        case 3:
+            times_forward = position[x+1][y];
+            times_left = position[x][y-1];
+            times_right = position[x][y+1];
+            break;
     }
-    current_facing = ((current_facing+1) % 4);
-    int *ptr = turn_store(current_facing, 0, x, y);
-    return position[ptr[0]][ptr[1]];
+    if (isWallForward()) times_forward = INT_MAX;
+    if (isWallLeft()) times_left = INT_MAX;
+    if (isWallRight()) times_right = INT_MAX;
 }
 
-bool timesRight_(int (&position)[20][20], int current_facing, int x, int y, bool is_right) {
-    if (is_right) {
-        return INT_MAX;
-    }
-    current_facing = ((current_facing+2) % 4);
-    int *ptr = turn_store(current_facing, 0, x, y);
-    return position[ptr[0]][ptr[1]];
-}
 
-void update(int (&position)[20][20], int current_facing, int moving_direction, int x, int y) {
-    int *ptr = turn_store(current_facing, moving_direction, x, y);
-    position[ptr[0]][ptr[1]]++;
-}
 
 void microMouseServer::studentAI()
 {
@@ -116,52 +81,67 @@ void microMouseServer::studentAI()
  * void foundFinish();
  * void printUI(const char *mesg);
 */
-    static int position[20][20] = {{0}};
-    static int ending = 0;
-    position[0][0] = 0;
+
+    static int position[20][20] = {{0}}; // Initialize position matrix
+    int times_left = 0, times_right = 0, times_forward = 0; // initialize number of times left, right, forward
     static int x = 0, y = 0;
+    static int ending = 0; // Ending case: 3 left turns in a row
+    static int current_direction = 0; // 0 is facing north, 1 is facing east, 2 is facing south, 3 is facing west
+//    print_map(position);
+    cout << "Current Direction: " << current_direction << endl;
+    cout << "Ending: " << ending << endl;
+    cout << "Times Left: " << times_left << endl;
+    cout << "Times Right: " << times_right << endl;
+    cout << "Times Forward: " << times_forward << endl;
+    cout << position[0][1] << endl;
+    cout << "X, Y: " << x << ", " << y << endl;
+    // Calculate the number of previous times right, left, and forward the mouse has been
 
-    static int current_facing = 0; // 0 is facing north, 1 is facing east, 2 is facing south, 3 is facing west
-//    static int moving_direction = 0;  // 0 is move forward, 1 is turn right, 2 is turn left
-//    bool wall_locations[3] = {isWallLeft(), isWallRight(), isWallForward()};
-    bool timesLeft = timesLeft_(position, current_facing, x, y, isWallLeft());
-    bool timesRight = timesRight_(position, current_facing, x, y, isWallRight());
-    bool timesForward = timesForward_(position, current_facing, x, y, isWallForward());
-    cout << "Times Left: " << timesLeft << endl;
-    cout << "Times Right: " << timesRight << endl;
-    cout << "Times Forward: " << timesForward << endl;
-    if (!isWallLeft() && timesLeft<=timesForward && timesForward<=timesRight) {
-//    turnLeft();
-//    moveForward();
-        update(current_facing, 2, x, y);
+    timesLRF(times_forward, times_left, times_right, position, current_direction, x, y);
+
+
+    if (!isWallLeft() && times_left<=times_right && times_left<=times_forward) {
+
         turnLeft();
-        update(current_facing, 0, x, y);
-        moveForward();
+
+        current_direction = (current_direction + 3) % 4;
+
+        cardinal_cartesian(x, y, current_direction, position);
+
 
         ending = 0;
     }
 
-    else if (!isWallForward() && timesForward<=timesRight) {
-        update(current_facing, 0, x, y);
-        moveForward();
+    else if (!isWallForward()  && times_forward<=times_right && times_forward<=times_left) {
+
+        cardinal_cartesian(x, y, current_direction, position);
+
         ending = 0;
     }
 
-    else if (!isWallRight()) {
-        update(current_facing, 1, x, y);
+    else if (!isWallRight() && times_right <= times_left && times_right <= times_forward) {
+
         turnRight();
-        update(current_facing, 0, x, y);
-        moveForward();
+
+        current_direction = (current_direction + 1) % 4;
+        cardinal_cartesian(x, y, current_direction, position);
+
         ending++;
     }
     else { // turn around
     turnRight();
     turnRight();
-    moveForward();
+    current_direction = (current_direction + 2) % 4;
+
+    cardinal_cartesian(x, y, current_direction, position);
     ending = 0;
     }
+
+    moveForward();
 
     if (ending == 3) {
     foundFinish();
     }
+
 }
+
