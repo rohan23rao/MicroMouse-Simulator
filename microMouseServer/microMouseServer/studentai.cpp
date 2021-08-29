@@ -3,6 +3,9 @@
 using namespace std;
 
 void cardinal_cartesian(int &x, int &y, int current_direction, int (&position)[20][20]) {
+    /* Function which updates the x and y values based on the current direction carinal->coordinate, and
+     * updates the position matrix
+     */
     switch (current_direction) {
         case 0:
             y++;
@@ -20,18 +23,14 @@ void cardinal_cartesian(int &x, int &y, int current_direction, int (&position)[2
     position[x][y]++;
 }
 
-void print_map(int position[20][20]) {
-    for (int i = 20; i > 0; i--) {
-        for (int j = 0; j < 20; j++) {
-//            cout << '[' << position[i][j] << ']';
-            cout << " " << position[i][j] << " ";
-        }
-        cout << endl;
-    }
-}
+
 
 void microMouseServer::timesLRF(int &times_forward, int &times_left, int &times_right, int (position)[20][20],
     int current_direction, int x, int y) {
+    /* Function with updates the times forward, left and right by checking the position matrix
+     * If there is a wall, then the times is temporarily set to INT_MAX to override the other times the mouse has
+     * been to the other locations.
+     */
     switch (current_direction) {
         case 0:
             times_forward = position[x][y++];
@@ -87,60 +86,64 @@ void microMouseServer::studentAI()
     static int x = 0, y = 0;
     static int ending = 0; // Ending case: 3 left turns in a row
     static int current_direction = 0; // 0 is facing north, 1 is facing east, 2 is facing south, 3 is facing west
-//    print_map(position);
-    cout << "Current Direction: " << current_direction << endl;
-    cout << "Ending: " << ending << endl;
-    cout << "Times Left: " << times_left << endl;
-    cout << "Times Right: " << times_right << endl;
-    cout << "Times Forward: " << times_forward << endl;
-    cout << position[0][1] << endl;
-    cout << "X, Y: " << x << ", " << y << endl;
+
+//    cout << "Current Direction: " << current_direction << endl;
+//    cout << "Ending: " << ending << endl;
+//    cout << "Times Left: " << times_left << endl;
+//    cout << "Times Right: " << times_right << endl;
+//    cout << "Times Forward: " << times_forward << endl;
+//    cout << position[0][1] << endl;
+//    cout << "X, Y: " << x << ", " << y << endl;
     // Calculate the number of previous times right, left, and forward the mouse has been
 
-    timesLRF(times_forward, times_left, times_right, position, current_direction, x, y);
+    timesLRF(times_forward, times_left, times_right, position, current_direction, x, y); // Method to update refrences of the times left, right and forward
 
 
-    if (!isWallLeft() && times_left<=times_right && times_left<=times_forward) {
+    if (!isWallLeft() && times_left<=times_right && times_left<=times_forward) { // check if wall to the left and if been left less times than forward and right
 
-        turnLeft();
+        turnLeft(); // turn left
+        times_left++; // increase times_left
+        current_direction = (current_direction + 3) % 4; // update current direction to left turn
 
-        current_direction = (current_direction + 3) % 4;
-
-        cardinal_cartesian(x, y, current_direction, position);
+        cardinal_cartesian(x, y, current_direction, position); // update position matrix and change cardinal directions to cartesian coordinates
 
 
-        ending = 0;
+        ending = 0; // set left turn ending to 0
     }
 
     else if (!isWallForward()  && times_forward<=times_right && times_forward<=times_left) {
+        // move forward at end
+        cardinal_cartesian(x, y, current_direction, position); // update position matrix and change cardinal directions to cartesian coordinates
 
-        cardinal_cartesian(x, y, current_direction, position);
 
-        ending = 0;
+        ending = 0; // set right turn ending to 0
     }
 
     else if (!isWallRight() && times_right <= times_left && times_right <= times_forward) {
 
-        turnRight();
+        turnRight(); // turn right
+        times_right++; // increase times been right
 
-        current_direction = (current_direction + 1) % 4;
-        cardinal_cartesian(x, y, current_direction, position);
+        current_direction = (current_direction + 1) % 4; // update current direction with turn right
+        cardinal_cartesian(x, y, current_direction, position); // update position matrix and change cardinal directions to cartesian coordinates
 
-        ending++;
+
+        ending++; // right turn so update ending
     }
     else { // turn around
     turnRight();
-    turnRight();
-    current_direction = (current_direction + 2) % 4;
+    turnRight(); // turn around
+    current_direction = (current_direction + 2) % 4; // update current direction
 
-    cardinal_cartesian(x, y, current_direction, position);
-    ending = 0;
+    cardinal_cartesian(x, y, current_direction, position); // update position matrix and change cardinal directions to cartesian coordinates
+
+    ending = 0; // change ending right turns to 0
     }
 
-    moveForward();
+    moveForward(); // move forward once
 
     if (ending == 3) {
-    foundFinish();
+    foundFinish(); // if three consectuive right turns, found finish
     }
 
 }
